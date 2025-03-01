@@ -17,7 +17,7 @@ export class NatsClient {
   nc?: NatsConnection;
   logger: Logger;
 
-  defaultIdleHeartbeat = 5_000_000_000; // 5 seconds
+  maxAge = 86_400 * 1e9; // 24 hours
 
   constructor({ connection, logger = console }: NatsClientOptions) {
     this.connection = connection;
@@ -38,11 +38,7 @@ export class NatsClient {
   /**
    * Get consumer if exists, otherwise add new consumer and return it
    */
-  async getConsumer({
-    stream,
-    name,
-    idleHeartbeat = this.defaultIdleHeartbeat,
-  }: ConsumerOptions) {
+  async getConsumer({ stream, name }: ConsumerOptions) {
     if (!this.nc) {
       throw new Error("Client isn't connected");
     }
@@ -57,7 +53,6 @@ export class NatsClient {
         deliver_policy: "new",
         name,
         durable_name: name,
-        idle_heartbeat: idleHeartbeat,
       });
       return await js.consumers.get(stream, name);
     }
@@ -79,6 +74,23 @@ export class NatsClient {
           this.logger.error(`Failed processing consume: ${err.message}`);
           m.nak();
         });
+    }
+  }
+
+  async initStream(name: string, subjects: string[], maxAge = this.maxAge) {
+    if (!this.nc) {
+      throw new Error("Client isn't connected");
+    }
+
+    const jsm = await jetstreamManager(this.nc);
+    try {
+      return await jsm.streams.info(name);
+    } catch {
+      return await jsm.streams.add({
+        name,
+        subjects,
+        max_age: maxAge,
+      });
     }
   }
 }
