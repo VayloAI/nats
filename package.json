@@ -1,0 +1,56 @@
+{
+  "name": "@vaylo/nats",
+  "version": "1.0.0",
+  "author": "Toil",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/bun": "latest",
+    "eslint": "^9.21.0",
+    "eslint-plugin-oxlint": "^0.15.12",
+    "husky": "^9.1.7",
+    "oxlint": "^0.15.12",
+    "prettier": "^3.5.2",
+    "tsc-esm-fix": "^3.1.2",
+    "typescript-eslint": "^8.25.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types/*": {
+      "require": "./dist/types/*.js",
+      "import": "./dist/types/*.js",
+      "types": "./dist/types/*.d.ts"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/VayloAI/nats/issues"
+  },
+  "description": "NATS logic for Vaylo",
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/VayloAI/nats",
+  "license": "MIT",
+  "scripts": {
+    "build:bun": "bun run ./scripts/build.ts",
+    "lint": "bunx oxlint --ignore-path=.oxlintignore && bunx eslint",
+    "prepare": "husky"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@nats-io/jetstream": "^3.0.0-38",
+    "@nats-io/transport-node": "^3.0.0-36"
+  }
+}
