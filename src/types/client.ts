@@ -18,5 +18,4 @@ export type NatsClientOptions = {
 export type ConsumerOptions = {
   stream: string;
   name: string;
-  idleHeartbeat?: number;
 };
