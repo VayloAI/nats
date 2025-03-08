@@ -3,18 +3,28 @@ import {
   ConnectionOptions,
   NatsConnection,
 } from "@nats-io/transport-node";
-import { Consumer, jetstream, jetstreamManager } from "@nats-io/jetstream";
+import {
+  Consumer,
+  JetStreamClient,
+  JetStreamManager,
+  jetstreamManager,
+} from "@nats-io/jetstream";
 
 import {
   ConsumeFn,
   ConsumerOptions,
   Logger,
   NatsClientOptions,
+  NatsPayload,
+  NatsPublishOptions,
 } from "./types/client";
 
+export { MsgHdrsImpl as MessageHeaders } from "@nats-io/nats-core/internal";
 export class NatsClient {
   connection: ConnectionOptions;
   nc?: NatsConnection;
+  jsm?: JetStreamManager;
+  js?: JetStreamClient;
   logger: Logger;
 
   maxAge = 86_400 * 1e9; // 24 hours
@@ -28,6 +38,8 @@ export class NatsClient {
     this.nc = await connect(this.connection);
     this.logger.debug(`Connected to NATS with ${this.nc.getServer()}`);
 
+    this.jsm = await jetstreamManager(this.nc);
+    this.js = this.jsm.jetstream();
     void this.nc.closed().then(() => {
       this.logger.debug("NATS connection closed!");
     });
@@ -35,26 +47,34 @@ export class NatsClient {
     return this;
   }
 
+  isConnected(): this is {
+    nc: NatsConnection;
+    js: JetStreamClient;
+    jsm: JetStreamManager;
+  } {
+    return (
+      this.nc !== undefined && this.js !== undefined && this.jsm !== undefined
+    );
+  }
+
   /**
    * Get consumer if exists, otherwise add new consumer and return it
    */
   async getConsumer({ stream, name }: ConsumerOptions) {
-    if (!this.nc) {
+    if (!this.isConnected()) {
       throw new Error("Client isn't connected");
     }
 
-    const jsm = await jetstreamManager(this.nc);
-    const js = jetstream(this.nc);
     try {
-      return await js.consumers.get(stream, name);
+      return await this.js.consumers.get(stream, name);
     } catch {
-      await jsm.consumers.add(stream, {
+      await this.jsm.consumers.add(stream, {
         ack_policy: "explicit",
         deliver_policy: "new",
         name,
         durable_name: name,
       });
-      return await js.consumers.get(stream, name);
+      return await this.js.consumers.get(stream, name);
     }
   }
 
@@ -65,28 +85,39 @@ export class NatsClient {
     const msgs = await consumer.consume({
       max_messages: maxMessages,
     });
-    for await (const m of msgs) {
-      asyncFn(m)
+    for await (const msg of msgs) {
+      asyncFn(msg)
         .then(() => {
-          m.ack();
+          msg.ack();
         })
         .catch((err: Error) => {
           this.logger.error(`Failed processing consume: ${err.message}`);
-          m.nak();
+          msg.nak();
         });
     }
   }
 
-  async initStream(name: string, subjects: string[], maxAge = this.maxAge) {
-    if (!this.nc) {
+  async publish(
+    subject: string,
+    payload: NatsPayload,
+    options?: NatsPublishOptions,
+  ) {
+    if (!this.isConnected()) {
       throw new Error("Client isn't connected");
     }
 
-    const jsm = await jetstreamManager(this.nc);
+    return await this.js.publish(subject, payload, options);
+  }
+
+  async initStream(name: string, subjects: string[], maxAge = this.maxAge) {
+    if (!this.isConnected()) {
+      throw new Error("Client isn't connected");
+    }
+
     try {
-      return await jsm.streams.info(name);
+      return await this.jsm.streams.info(name);
     } catch {
-      return await jsm.streams.add({
+      return await this.jsm.streams.add({
         name,
         subjects,
         max_age: maxAge,
