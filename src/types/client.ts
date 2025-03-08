@@ -1,5 +1,5 @@
-import { JsMsg } from "@nats-io/jetstream";
-import { ConnectionOptions } from "@nats-io/transport-node";
+import { JetStreamPublishOptions, JsMsg } from "@nats-io/jetstream";
+import { ConnectionOptions, Payload } from "@nats-io/transport-node";
 
 export interface Logger {
   debug(...args: unknown[]): void;
@@ -8,7 +8,11 @@ export interface Logger {
   error(...args: unknown[]): void;
 }
 
-export type ConsumeFn = (message: JsMsg) => Promise<unknown>;
+export type NatsMessage = JsMsg;
+export type NatsPayload = Payload;
+export type NatsPublishOptions = Partial<JetStreamPublishOptions>;
+
+export type ConsumeFn = (message: NatsMessage) => Promise<unknown>;
 
 export type NatsClientOptions = {
   connection: ConnectionOptions;
