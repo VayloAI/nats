@@ -1,3 +1,7 @@
+# 1.1.1
+
+- Rebuild dist
+
 # 1.1.0
 
 - Added publish method
