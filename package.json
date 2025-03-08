@@ -1,22 +1,22 @@
 {
   "name": "@vaylo/nats",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "Toil",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
+    "@eslint/js": "^9.22.0",
     "@types/bun": "latest",
-    "eslint": "^9.21.0",
-    "eslint-plugin-oxlint": "^0.15.12",
+    "eslint": "^9.22.0",
+    "eslint-plugin-oxlint": "^0.15.13",
     "husky": "^9.1.7",
-    "oxlint": "^0.15.12",
-    "prettier": "^3.5.2",
+    "oxlint": "^0.15.13",
+    "prettier": "^3.5.3",
     "tsc-esm-fix": "^3.1.2",
-    "typescript-eslint": "^8.25.0"
+    "typescript-eslint": "^8.26.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.7.3"
   },
   "publishConfig": {
     "access": "public"
@@ -31,6 +31,11 @@
       "require": "./dist/types/*.js",
       "import": "./dist/types/*.js",
       "types": "./dist/types/*.d.ts"
+    },
+    "./schema": {
+      "require": "./dist/schema.js",
+      "import": "./dist/schema.js",
+      "types": "./dist/schema.d.ts"
     }
   },
   "bugs": {
@@ -51,6 +56,7 @@
   "types": "./dist/index.d.ts",
   "dependencies": {
     "@nats-io/jetstream": "^3.0.0-38",
-    "@nats-io/transport-node": "^3.0.0-36"
+    "@nats-io/transport-node": "^3.0.0-36",
+    "@sinclair/typebox": "^0.34.28"
   }
 }
